@@ -3,7 +3,15 @@
 Reference: https://github.com/cccntu/minLoRA
 """
 
-from .model import LoRAParametrization, add_lora, default_lora_config, merge_lora, remove_lora
+from .model import (
+    LoRAParametrization, 
+    LoRAFAParametrization, 
+    add_lora,
+    add_lora_by_layer_names,
+    default_lora_config, 
+    merge_lora, 
+    remove_lora
+)
 from .utils import (
     apply_to_lora,
     disable_lora,

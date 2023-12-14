@@ -12,20 +12,23 @@ from torch import nn
 
 
 class LoRAParametrization(nn.Module):
-    def __init__(self, fan_in, fan_out, fan_in_fan_out=False, rank=4, lora_dropout_p=0.0, lora_alpha=1):
+    def __init__(self, fan_in, fan_out, fan_in_fan_out=False, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="kaiming", original_weights=None):
         super().__init__()
         # if weight is stored as (fan_out, fan_in), the memory layout of A & B follows (W + BA)x
         # otherwise, it's x(W + AB). This allows us to tie the weights between linear layers and embeddings
         self.swap = (lambda x: (x[1], x[0])) if fan_in_fan_out else (lambda x: x)
+        self.lora_alpha, self.rank = lora_alpha, rank
         self.lora_A = nn.Parameter(torch.zeros(self.swap((rank, fan_in))))
         self.lora_B = nn.Parameter(torch.zeros(self.swap((fan_out, rank))))
-        nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
-        self.lora_alpha, self.rank = lora_alpha, rank
+        self.original_weights = original_weights
+        self._init_AB(init_method)
+        #nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
         self.scaling = lora_alpha / rank
         self.lora_dropout = nn.Dropout(p=lora_dropout_p) if lora_dropout_p > 0 else lambda x: x
         self.dropout_fn = self._dropout if lora_dropout_p > 0 else lambda x: x
         self.register_buffer("lora_dropout_mask", torch.ones(self.swap((1, fan_in)), dtype=self.lora_A.dtype))
         self.forward_fn = self.lora_forward
+
 
     def _dropout(self, A):
         # to mimic the original implementation: A @ dropout(x), we do (A * dropout(ones)) @ x
@@ -43,11 +46,28 @@ class LoRAParametrization(nn.Module):
     def enable_lora(self):
         self.forward_fn = self.lora_forward
 
+    def _init_AB(self, init_method):
+        if init_method == "kaiming":
+            nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
+        elif init_method == "svd":
+            if self.original_weights is None:
+                raise ValueError("original_weights must be provided for svd init")
+            u, s, v = torch.linalg.svd(self.original_weights)
+            self.lora_A.data = (u[:, :self.rank] * s[:self.rank]).T
+            self.lora_B.data = v[:, :self.rank] 
+
     @classmethod
-    def from_linear(cls, layer, rank=4, lora_dropout_p=0.0, lora_alpha=1):
+    def from_linear(cls, layer, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="kaiming", original_weights=None):
         fan_out, fan_in = layer.weight.shape
         return cls(
-            fan_in, fan_out, fan_in_fan_out=False, rank=rank, lora_dropout_p=lora_dropout_p, lora_alpha=lora_alpha
+            fan_in, 
+            fan_out, 
+            fan_in_fan_out=False, 
+            rank=rank, 
+            lora_dropout_p=lora_dropout_p,
+            lora_alpha=lora_alpha, 
+            init_method=init_method, 
+            original_weights=original_weights
         )
 
     @classmethod
@@ -63,6 +83,12 @@ class LoRAParametrization(nn.Module):
         return cls(
             fan_in, fan_out, fan_in_fan_out=True, rank=rank, lora_dropout_p=lora_dropout_p, lora_alpha=lora_alpha
         )
+    
+
+class LoRAFAParametrization(LoRAParametrization):
+    def __init__(self, fan_in, fan_out, fan_in_fan_out=False, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="svd", original_weights=None):
+        super().__init__(fan_in, fan_out, fan_in_fan_out, rank, lora_dropout_p, lora_alpha, init_method, original_weights)
+        self.lora_A.requires_grad_(False) # just freeze A and all good
 
 
 default_lora_config = {  # specify which layers to add lora to, by default only add to linear layers
@@ -94,6 +120,13 @@ def add_lora_by_name(model, target_module_names, lora_config=default_lora_config
     for name, layer in model.named_modules():
         if any([m in name for m in target_module_names]):
             add_lora(layer, lora_config=lora_config)
+
+
+def add_lora_by_layer_names(model, lora_named_config=None):
+    """Add LoRA parameterization to layers specified by unique names in config"""
+    for name, layer in model.named_modules():
+        if name in lora_named_config:
+            add_lora(layer, lora_config=lora_named_config[name])
 
 
 def merge_lora(model):
