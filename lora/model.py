@@ -88,7 +88,17 @@ class LoRAParametrization(nn.Module):
 class LoRAFAParametrization(LoRAParametrization):
     def __init__(self, fan_in, fan_out, fan_in_fan_out=False, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="svd", original_weights=None):
         super().__init__(fan_in, fan_out, fan_in_fan_out, rank, lora_dropout_p, lora_alpha, init_method, original_weights)
-        self.lora_A.requires_grad_(False) # just freeze A and all good
+        self.lora_A.requires_grad_(False)
+
+    def _init_AB(self, init_method):
+        if init_method == "kaiming":
+            nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
+            # note - from paper: initialize frozen A with orthogonal basis obtained from QR decomposition of A
+            Q, R = torch.linalg.qr(self.lora_A.data.T)
+            self.lora_A.data = Q.T
+            self.lora_B.data = torch.matmul(self.lora_B, R)
+        elif init_method == "svd":
+            super()._init_AB('svd')
 
 
 default_lora_config = {  # specify which layers to add lora to, by default only add to linear layers
