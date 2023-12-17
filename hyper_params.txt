@@ -1,0 +1,19 @@
+# Common #
+warmup_ratio = 0.06
+lr = 4e-4
+rank = 2
+
+# n_steps = len(train_loader) * n_epoch
+# warmup_steps = warmup_ratio * n_steps
+
+# def lr_lambda(current_step):
+#     if current_step <= warmup_steps:
+#         return (current_step + 1) / max(1, warmup_steps)
+#     else:
+#         return (n_steps - current_step) / (max(1, n_steps - warmup_steps))
+
+# optimizer = AdamW
+
+# Roberta-base #
+max_length = 128
+batch_size = 64
