@@ -21,7 +21,7 @@ LoRA - Low Rank Adaptation of LLM - is one of the most popular methods for effic
 
 "WNLI":'https://dl.fbaipublicfiles.com/glue/data/WNLI.zip',
 
-"diagnostic":'https://dl.fbaipublicfiles.com/glue/data/AX.tsv'}
+"diagnostic":'https://dl.fbaipublicfiles.com/glue/data/AX.tsv'
 
 ### How to run
 
