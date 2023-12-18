@@ -23,6 +23,10 @@ LoRA - Low Rank Adaptation of LLM - is one of the most popular methods for effic
 
 "diagnostic":'https://dl.fbaipublicfiles.com/glue/data/AX.tsv'
 
+MRPC_TRAIN = 'https://dl.fbaipublicfiles.com/senteval/senteval_data/msr_paraphrase_train.txt'
+
+MRPC_TEST = 'https://dl.fbaipublicfiles.com/senteval/senteval_data/msr_paraphrase_test.txt'
+
 ### How to run
 
 ...
