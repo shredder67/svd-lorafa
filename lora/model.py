@@ -12,7 +12,7 @@ from torch import nn
 
 
 class LoRAParametrization(nn.Module):
-    def __init__(self, fan_in, fan_out, fan_in_fan_out=False, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="kaiming", original_weights=None):
+    def __init__(self, fan_in, fan_out, fan_in_fan_out=False, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="kaiming", original_weights=None, cache_V=False):
         super().__init__()
         # if weight is stored as (fan_out, fan_in), the memory layout of A & B follows (W + BA)x
         # otherwise, it's x(W + AB). This allows us to tie the weights between linear layers and embeddings
@@ -21,6 +21,7 @@ class LoRAParametrization(nn.Module):
         self.lora_A = nn.Parameter(torch.zeros(self.swap((rank, fan_in))))
         self.lora_B = nn.Parameter(torch.zeros(self.swap((fan_out, rank))))
         self.original_weights = original_weights
+        self.cache_V = cache_V # for regularization
         self._init_AB(init_method)
         #nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
         self.scaling = lora_alpha / rank
@@ -56,11 +57,12 @@ class LoRAParametrization(nn.Module):
             self.lora_A.data = (u[:, :self.rank] * s[:self.rank]).T
             self.lora_B.data = v[:, :self.rank] 
             
-            self.register_buffer("V", v[:, :self.rank].clone()) # should make this optional
+            if self.cache_V:
+                self.register_buffer("V", v[:, :self.rank].clone()) # should make this optional
 
 
     @classmethod
-    def from_linear(cls, layer, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="kaiming", original_weights=None):
+    def from_linear(cls, layer, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="kaiming", original_weights=None, cache_V=False):
         fan_out, fan_in = layer.weight.shape
         return cls(
             fan_in, 
@@ -70,7 +72,8 @@ class LoRAParametrization(nn.Module):
             lora_dropout_p=lora_dropout_p,
             lora_alpha=lora_alpha, 
             init_method=init_method, 
-            original_weights=original_weights
+            original_weights=original_weights,
+            cache_V=cache_V
         )
 
     @classmethod
@@ -89,8 +92,8 @@ class LoRAParametrization(nn.Module):
     
 
 class LoRAFAParametrization(LoRAParametrization):
-    def __init__(self, fan_in, fan_out, fan_in_fan_out=False, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="svd", original_weights=None):
-        super().__init__(fan_in, fan_out, fan_in_fan_out, rank, lora_dropout_p, lora_alpha, init_method, original_weights)
+    def __init__(self, fan_in, fan_out, fan_in_fan_out=False, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="svd", original_weights=None, cache_V=False):
+        super().__init__(fan_in, fan_out, fan_in_fan_out, rank, lora_dropout_p, lora_alpha, init_method, original_weights, cache_V)
         self.lora_A.requires_grad_(False)
 
     def _init_AB(self, init_method):
