@@ -36,6 +36,10 @@ We experiment with RoBERTa-base model (150 M. parameterse) on several datasets f
 
 "diagnostic":'https://dl.fbaipublicfiles.com/glue/data/AX.tsv'
 
+MRPC_TRAIN = 'https://dl.fbaipublicfiles.com/senteval/senteval_data/msr_paraphrase_train.txt'
+
+MRPC_TEST = 'https://dl.fbaipublicfiles.com/senteval/senteval_data/msr_paraphrase_test.txt'
+
 ### How to run
 
 In order to successfully run notebooks in environment, one is expected to have installed latest ```pytorch```, ```transformers``` and ```datatsets``` libraries, as well as other standard dependencies like ```numpy```, ```matplotlib``` and ```jupyter notebook``` (as well as other imports in notebooks that didn't end up being mentioned here :)). 
