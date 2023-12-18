@@ -55,6 +55,9 @@ class LoRAParametrization(nn.Module):
             u, s, v = torch.linalg.svd(self.original_weights)
             self.lora_A.data = (u[:, :self.rank] * s[:self.rank]).T
             self.lora_B.data = v[:, :self.rank] 
+            
+            self.register_buffer("V", v[:, :self.rank].clone()) # should make this optional
+
 
     @classmethod
     def from_linear(cls, layer, rank=4, lora_dropout_p=0.0, lora_alpha=1, init_method="kaiming", original_weights=None):
