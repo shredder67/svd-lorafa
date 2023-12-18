@@ -7,7 +7,7 @@ LoRA - Low Rank Adaptation of LLM - is one of the most popular methods for effic
 
 Our contribution is that we try to observe more efficient loss/metric convergence while training from better initial low-rank weights obtained via low-rank approximation of initial $W$ via simple singular value decomposition.
 
-We experiment with RoBERTa-base model (150 M. parameterse) on several datasets from GLUE (mainly on MRPC) and observe dynamics of metrics and losses of standard LoRA-FA vs our initialized with SVD. We also experiment with additional regularization (see corresponding notebook).
+We experiment with RoBERTa-base model (150 M. parameterse) on several datasets from GLUE (MRPC, RTE, COLA) and observe dynamics of metrics and losses of standard LoRA-FA vs our initialized with SVD. We also experiment with additional regularization (see corresponding notebook).
 
 ### Structure
 
@@ -25,7 +25,14 @@ With all dependencies installed one can run experiment notebooks (or demo ones) 
 
 ### Results
 
-...
+As a result of many experiments, we observe clear superiority of low-rank SVD initialization of AB - in training regimes with smaller learning rates they converge always faster and to better quality, while with greater LR (~0.005) quality and speed becomes comparable (bu still with noticable gap).
+
+Some plots with our results (you can visit ```plots_for_preso.ipynb``` to see more of them):
+
+![text](imgs/mrpc_r4_1e-4.png)
+![text](imgs/mrpc_r4_4e-4.png)
+![text](imgs/cola_r2_4e-4.png)
+![text](imgs/rte_r2_4e-4.png)
 
 ### References
 
