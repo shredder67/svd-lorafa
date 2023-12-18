@@ -1,4 +1,6 @@
 .vscode/
+data/
+logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -26,6 +28,8 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+**/*.pkl
+data/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
