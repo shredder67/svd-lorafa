@@ -57,6 +57,8 @@ class GLUEDatasetRoberta(Dataset):
             label_column = 'score'
             self.csv = pd.read_csv(file, delimiter='\t', on_bad_lines='skip')
             self.csv[label_column] = self.csv[label_column].astype(float)
+            self.csv.dropna(inplace=True)
+            self.csv.reset_index(inplace=True)
             text1 = list(self.csv['sentence1'])
             text2 = list(self.csv['sentence2'])
             self.texts = [text1, text2]
