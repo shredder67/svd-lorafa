@@ -70,7 +70,6 @@ Some plots with our results (you can visit ```plots_for_preso.ipynb``` to see mo
 3. Pavel Bartenev, [@PavelBartenev](https://github.com/PavelBartenev)
 4. Pavel Tikhomirov, [@ocenandor](https://github.com/ocenandor)
 5. Maksim Komiakov, [@kommaks](https://github.com/kommaks)
-6. 
 
 ### License
 
